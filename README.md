@@ -15,6 +15,20 @@
 
 ---
 
+## 📸 Gameplay Preview
+
+| Arena Battle (In-Game Combat) | Character Selection (8 Unique Classes) |
+| :---: | :---: |
+| ![Arena Battle](docs/screenshots/battle.png) | ![Character Selection](docs/screenshots/pick_screen.png) |
+| *Real-time physics-based rooster brawl with hitboxes & combat text* | *8 procedural rooster breeds with distinct playstyles & elemental buffs* |
+
+| Main Menu | Match Lobby & Custom Rules |
+| :---: | :---: |
+| ![Main Menu](docs/screenshots/menu.png) | ![Lobby](docs/screenshots/lobby.png) |
+| *Instant LAN join or practice offline against AI bots* | *Custom match rules: arenas, bot difficulty, respawn vs survival* |
+
+---
+
 ## 🏗️ Project Architecture (Monorepo)
 
 The repository is organized into three clean layers:
