@@ -747,7 +747,6 @@ class LanguageToggleButton extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final current = ref.watch(l10nProvider);
-    final next = current == AppLang.vi ? AppLang.en : AppLang.vi;
 
     return Material(
       color: Colors.transparent,
