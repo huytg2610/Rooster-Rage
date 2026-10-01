@@ -8,6 +8,7 @@ import 'package:flutter/painting.dart'
 import 'package:rooster_core/rooster_core.dart';
 
 import '../controls/controls_layout.dart';
+import '../l10n/l10n.dart';
 import '../net/snapshot_buffer.dart';
 import '../ui/theme.dart';
 import 'projection.dart' show Styles, TextCache;
@@ -27,12 +28,13 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
 
   @override
   void render(Canvas canvas) {
+    final s = L10n.current;
     final frame = game.frame;
     final size = game.size.toSize();
     if (frame == null) {
       _text.paint(
         canvas,
-        'Đang đồng bộ trận...',
+        s.hudSyncing,
         _s(16, RC.cream),
         size.center(Offset.zero),
       );
@@ -47,14 +49,14 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
     if (me == null) {
       _text.paint(
         canvas,
-        'Đang xem — bạn sẽ vào trận sau',
+        s.hudSpectating,
         _s(14, RC.muted),
         Offset(size.width / 2, size.height - 24),
       );
     } else if (me.s.has(FFlag.out) && me.s.state != FState.fakeDead) {
       _text.paint(
         canvas,
-        'BẠN ĐÃ BỊ LOẠI — đang xem trận',
+        s.hudEliminated,
         _s(15, RC.red),
         Offset(size.width / 2, size.height - 24),
       );
@@ -68,9 +70,10 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
     const x = 52.0, y = 8.0;
     // Shrink on narrow portrait screens so the centered timer stays clear.
     final w = (game.size.x / 2 - 100).clamp(92.0, 170.0);
+    final l = L10n.current;
     final def = ChickenClasses.byId(info.classId);
     final nameTp = _text.get(
-      def.nameVi,
+      l.chickenName(def),
       _s(12, Color(slotColors[info.slot % 8])),
     );
     nameTp.paint(canvas, const Offset(x, y - 1));
@@ -111,7 +114,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
     }
 
     bar(
-      'MÁU',
+      l.hudHp,
       '${s.hp.round()}/${info.maxHp.round()}',
       s.hp,
       info.maxHp,
@@ -120,18 +123,18 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
     );
     final tired = s.stamina < info.maxStamina * 0.25;
     bar(
-      tired ? 'THỂ LỰC — THẤP!' : 'THỂ LỰC',
+      tired ? l.hudStaminaLow : l.hudStamina,
       '${s.stamina.round()}',
       s.stamina,
       info.maxStamina,
       tired ? RC.orange : const Color(0xFFC99A12),
       13,
     );
-    bar('THĂNG BẰNG', '', s.balance, info.maxBalance, RC.balance, 12);
+    bar(l.hudBalance, '', s.balance, info.maxBalance, RC.balance, 12);
     if (s.shieldBroken) {
       // Shattered: grey while it mends back to a quarter.
       bar(
-        'KHIÊN VỠ',
+        l.hudShieldBroken,
         '${(s.shield / Tuning.shieldMax * 100).round()}%',
         s.shield,
         Tuning.shieldMax,
@@ -140,7 +143,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
       );
     } else {
       bar(
-        'KHIÊN',
+        l.hudShield,
         '${(s.shield / Tuning.shieldMax * 100).round()}%',
         s.shield,
         Tuning.shieldMax,
@@ -154,7 +157,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
         ? 0.65 + 0.35 * math.sin(game.clock * 10)
         : 1.0;
     bar(
-      raging ? 'ĐANG NỘ' : (rageFull ? 'NỘ ĐẦY — BẤM U' : 'NỘ'),
+      raging ? l.hudRaging : (rageFull ? l.hudRageFull : l.hudRage),
       raging ? '${s.rageTimer.ceil()}s' : '${s.rage.floor()}%',
       raging ? s.rageTimer : s.rage,
       raging ? Tuning.rageDuration : Tuning.rageMax,
@@ -180,7 +183,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
       final left = snap.fighters.where((f) => !f.has(FFlag.out)).length;
       _text.paint(
         canvas,
-        'SINH TỒN · còn $left',
+        L10n.current.hudSurvivalLeft(left),
         _s(10, RC.gold),
         c + const Offset(0, 22),
       );
@@ -205,7 +208,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
       if (info == null) continue;
       final mine = f.id == game.localId;
       final out = f.has(FFlag.out);
-      final label = '${compact ? '' : '${info.name}  '}${f.kos}${out ? ' · loại' : ''}';
+      final label = '${compact ? '' : '${info.name}  '}${f.kos}${out ? L10n.current.hudOutTag : ''}';
       final tp = _text.get(
         label,
         _s(11, out ? RC.muted : (mine ? RC.gold : RC.cream)),
@@ -285,6 +288,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
     final raging = s.has(FFlag.rage);
     final rageReady = s.rage >= Tuning.rageMax && !raging;
     final skillCdMax = info.skillCooldown * Tuning.rageSkillCooldownMul;
+    final curL10n = L10n.current;
     final specs = <(String, double, Color, bool)>[
       // Fills up with the rage bar; full = "NỘ + CHIÊU" in one tap. While
       // raging it shows the skill and its short cooldown.
@@ -296,15 +300,15 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
               s.skillCd <= 0,
             )
           : (
-              rageReady ? 'NỘ + CHIÊU' : 'CHIÊU cần NỘ',
+              rageReady ? curL10n.hudRageSkill : curL10n.hudSkillNeedsRage,
               rageReady ? 0 : 1 - (s.rage / Tuning.rageMax).clamp(0.0, 1.0),
               RC.rage,
               rageReady,
             ),
-      ('GÁY', s.crowCd / Tuning.crowCooldown, RC.cream, s.crowCd <= 0),
+      (curL10n.hudCrow, s.crowCd / Tuning.crowCooldown, RC.cream, s.crowCd <= 0),
       s.shieldBroken
           ? (
-              'KHIÊN VỠ',
+              curL10n.hudShieldBroken,
               1 -
                   (s.shield / (Tuning.shieldMax * Tuning.shieldRaiseMin)).clamp(
                     0.0,
@@ -313,7 +317,7 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
               RC.blue,
               false,
             )
-          : ('THỦ', 0, RC.blue, true),
+          : (curL10n.hudGuard, 0, RC.blue, true),
     ];
     for (var i = 0; i < specs.length; i++) {
       final c = l.buttons[i];
@@ -398,22 +402,23 @@ class HudLayer extends PositionComponent with HasGameReference<RoosterGame> {
   void _banner(Canvas canvas, Size size, MatchSnap snap) {
     String? text;
     Color color = RC.gold;
+    final l = L10n.current;
     if (snap.phase == MatchPhase.countdown) {
       final n = snap.countdown.ceil();
-      text = n > 0 ? '$n' : 'ĐÁ!';
+      text = n > 0 ? '$n' : l.bannerFight;
     } else if (snap.phase == MatchPhase.fighting &&
         snap.remaining > game.duration - 0.8) {
-      text = 'ĐÁ!';
+      text = l.bannerFight;
       color = RC.orange;
     } else if (snap.phase == MatchPhase.ended) {
       final standing = snap.fighters.where((f) => !f.has(FFlag.out)).length;
       if (game.survival && standing <= 1) {
         final me = snap.fighter(game.localId ?? -1);
         final won = me != null && !me.has(FFlag.out);
-        text = won ? 'SỐNG SÓT!' : 'KẾT THÚC!';
+        text = won ? l.bannerSurvived : l.bannerEnded;
         color = won ? RC.gold : RC.red;
       } else {
-        text = 'HẾT GIỜ!';
+        text = l.bannerTimeUp;
         color = RC.red;
       }
     }

@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rooster_core/rooster_core.dart';
 
+import '../l10n/l10n.dart';
 import '../ui/theme.dart';
 import 'chicken_avatar.dart';
 
 /// Everything a player needs to know about one chicken: role, stats,
 /// rage skill, how to play. Used by the roster screen and the in-match
 /// "my chicken" panel (players said the reveal flashes by too fast).
-class ChickenInfoCard extends StatelessWidget {
+class ChickenInfoCard extends ConsumerWidget {
   final ChickenClassDef def;
   final Variant? variant;
   final Rarity? rarity;
@@ -24,7 +26,9 @@ class ChickenInfoCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(l10nProvider);
+    final l = L10n.current;
     final s = def.stats;
     final v =
         variant ??
@@ -82,7 +86,7 @@ class ChickenInfoCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                def.nameVi,
+                l.chickenName(def),
                 style: TextStyle(
                   fontSize: compact ? 16 : 18,
                   fontWeight: FontWeight.w900,
@@ -90,7 +94,7 @@ class ChickenInfoCard extends StatelessWidget {
                 ),
               ),
               Text(
-                def.role.nameVi,
+                l.roleName(def.role),
                 style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
@@ -98,9 +102,9 @@ class ChickenInfoCard extends StatelessWidget {
               ),
               Row(
                 children: [
-                  const Text(
-                    'Độ khó ',
-                    style: TextStyle(fontSize: 11, color: RC.muted),
+                  Text(
+                    l.difficulty,
+                    style: const TextStyle(fontSize: 11, color: RC.muted),
                   ),
                   for (var i = 1; i <= 3; i++)
                     Icon(
@@ -112,8 +116,7 @@ class ChickenInfoCard extends StatelessWidget {
               ),
               if (variant != null)
                 Text(
-                  'Hệ ${variant!.nameVi}: ${variant!.perkVi}'
-                  '${rarity != null ? ' · ${rarity!.nameVi}' : ''}',
+                  l.variantBadge(variant!, rarity),
                   style: TextStyle(fontSize: 11, color: Color(variant!.color)),
                 ),
             ],
@@ -135,15 +138,15 @@ class ChickenInfoCard extends StatelessWidget {
         children: [
           header,
           const SizedBox(height: 8),
-          stat('Máu', s.hp * Tuning.hpScale, 150, RC.hp),
-          stat('Sát thương', s.damage, 120, RC.orange),
-          stat('Tốc độ', s.speed, 120, RC.green),
-          stat('Thể lực', s.stamina, 120, RC.stamina),
-          stat('Thăng bằng', s.balance, 150, RC.balance),
-          stat('Giáp %', s.armor * 100, 30, RC.muted),
+          stat(l.statHp, s.hp * Tuning.hpScale, 150, RC.hp),
+          stat(l.statAtk, s.damage, 120, RC.orange),
+          stat(l.statSpd, s.speed, 120, RC.green),
+          stat(l.statStm, s.stamina, 120, RC.stamina),
+          stat(l.statBalance, s.balance, 150, RC.balance),
+          stat('${l.statArmor} %', s.armor * 100, 30, RC.muted),
           // Guard shield mend speed (balance + armor): longer bar = faster.
           stat(
-            'Hồi khiên',
+            l.statShieldRegen,
             Fighter.guardRatingOf(def),
             2,
             RC.blue,
@@ -154,16 +157,16 @@ class ChickenInfoCard extends StatelessWidget {
             TextSpan(
               children: [
                 TextSpan(
-                  text: 'Kỹ năng (U): ${def.skillName}',
+                  text: l.skillHeader(def.skillName),
                   style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 13,
                   ),
                 ),
                 TextSpan(
-                  text:
-                      '  — chỉ khi NỘ, hồi '
-                      '${(def.skillCooldown * Tuning.rageSkillCooldownMul).toStringAsFixed(1)}s',
+                  text: l.rageOnlyCooldown(
+                    (def.skillCooldown * Tuning.rageSkillCooldownMul).toStringAsFixed(1),
+                  ),
                   style: const TextStyle(fontSize: 11, color: RC.rage),
                 ),
               ],
@@ -171,7 +174,7 @@ class ChickenInfoCard extends StatelessWidget {
           ),
           const SizedBox(height: 2),
           Text(
-            def.skillDescVi,
+            l.chickenSkillDesc(def),
             style: const TextStyle(fontSize: 12, height: 1.3),
           ),
           const SizedBox(height: 6),
@@ -182,7 +185,7 @@ class ChickenInfoCard extends StatelessWidget {
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
-                  def.tipVi,
+                  l.chickenTip(def),
                   style: const TextStyle(
                     fontSize: 12,
                     height: 1.3,

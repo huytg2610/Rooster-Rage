@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:rooster_core/rooster_core.dart';
 
 import '../app/providers.dart';
+import '../l10n/l10n.dart';
 import '../net/client_link.dart';
 import '../net/session.dart';
 import '../ui/theme.dart';
@@ -19,6 +20,8 @@ class RoomScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
     final session = ref.watch(sessionProvider);
     if (session == null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,15 +56,15 @@ class RoomScreen extends ConsumerWidget {
                     session.linkStatus == LinkStatus.connecting)
                   _Banner(
                     text: session.linkStatus == LinkStatus.connecting
-                        ? 'Đang kết nối tới host...'
-                        : 'Mất kết nối — đang nối lại...',
+                        ? s.connectingToHost
+                        : s.reconnectingToHost,
                   ),
                 if (session.closedReason != null && !session.closedByMe)
                   _Disconnected(
                     onLeave: leave,
                     message: session.closedReason!,
                     icon: Icons.meeting_room_outlined,
-                    hint: 'Bạn đã được đưa ra khỏi phòng.',
+                    hint: s.kickedFromRoom,
                   )
                 else if (session.linkStatus == LinkStatus.closed &&
                     session.closedReason == null)
@@ -130,39 +133,42 @@ class _Banner extends StatelessWidget {
 
 class _Disconnected extends StatelessWidget {
   final VoidCallback onLeave;
-  final String message;
+  final String? message;
   final IconData icon;
-  final String hint;
+  final String? hint;
   const _Disconnected({
     required this.onLeave,
-    this.message = 'Không kết nối được tới host.',
+    this.message,
     this.icon = Icons.wifi_off,
-    this.hint = 'Kiểm tra cùng WiFi và host đang chạy.',
+    this.hint,
   });
 
   @override
-  Widget build(BuildContext context) => Positioned.fill(
-    child: ColoredBox(
-      color: const Color(0xCC000000),
-      child: Center(
-        child: WoodPanel(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(icon, size: 40, color: RC.gold),
-              const SizedBox(height: 10),
-              Text(message, textAlign: TextAlign.center),
-              const SizedBox(height: 4),
-              Text(hint, style: const TextStyle(color: RC.muted, fontSize: 13)),
-              const SizedBox(height: 14),
-              FilledButton(
-                onPressed: onLeave,
-                child: const Text('VỀ MÀN HÌNH CHÍNH'),
-              ),
-            ],
+  Widget build(BuildContext context) {
+    final s = L10n.current;
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0xCC000000),
+        child: Center(
+          child: WoodPanel(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 40, color: RC.gold),
+                const SizedBox(height: 10),
+                Text(message ?? s.cannotConnectHost, textAlign: TextAlign.center),
+                const SizedBox(height: 4),
+                Text(hint ?? s.wifiCheckHint, style: const TextStyle(color: RC.muted, fontSize: 13)),
+                const SizedBox(height: 14),
+                FilledButton(
+                  onPressed: onLeave,
+                  child: Text(s.backToHome),
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
+  }
 }

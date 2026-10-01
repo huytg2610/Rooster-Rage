@@ -11,6 +11,7 @@
 - **🎨 Procedural Vector Graphics**: Fighters are drawn procedurally using Flutter Canvas (`dart:ui`) instead of heavy sprite sheets, allowing dynamic feather colors, crests, spurs, and lightweight bundle sizes.
 - **🔊 Synthesized Web Audio**: Dynamic, real-time procedural sound effects and retro chiptune battle music synthesized in code via the Web Audio API.
 - **📱 Responsive Multi-Platform Controls**: Adaptive controls featuring on-screen touch virtual joysticks for mobile browsers and keyboard bindings for desktop.
+- **🌐 Bilingual Support (English & Vietnamese)**: Seamless real-time language toggle (`🇻🇳 VI` ⇄ `🇬🇧 EN`) across all menus, character pick screens, roster guide, and in-game combat HUD.
 - **🤖 Offline Solo Mode**: Practice offline against configurable AI bots with difficulty scaling.
 
 ---

@@ -1,24 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/l10n.dart';
 import '../net/session.dart';
 import '../ui/theme.dart';
 
 /// Owner-only: confirm, then close the LAN room and kick every player.
 Future<void> confirmCloseRoom(BuildContext context, Session session) async {
+  final s = L10n.current;
   final others = (session.room?.players.length ?? 1) - 1;
   final ok = await showDialog<bool>(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text('Đóng phòng LAN?'),
-      content: Text(
-        others > 0
-            ? 'Tất cả $others người chơi khác sẽ bị đưa ra khỏi phòng.'
-            : 'Phòng sẽ bị đóng.',
-      ),
+      title: Text(s.closeRoomTitle),
+      content: Text(s.closeRoomContent(others)),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Huỷ'),
+          child: Text(s.cancel),
         ),
         FilledButton(
           style: FilledButton.styleFrom(
@@ -26,7 +25,7 @@ Future<void> confirmCloseRoom(BuildContext context, Session session) async {
             foregroundColor: RC.cream,
           ),
           onPressed: () => Navigator.pop(ctx, true),
-          child: const Text('ĐÓNG PHÒNG'),
+          child: Text(s.closeRoomConfirm),
         ),
       ],
     ),
@@ -35,7 +34,7 @@ Future<void> confirmCloseRoom(BuildContext context, Session session) async {
 }
 
 /// Red "close room" button shown to the owner of a LAN room.
-class CloseRoomButton extends StatelessWidget {
+class CloseRoomButton extends ConsumerWidget {
   final Session session;
   final bool compact;
   const CloseRoomButton({
@@ -45,12 +44,14 @@ class CloseRoomButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
     if (!session.isOwner || session.isLocal) return const SizedBox.shrink();
     void onTap() => confirmCloseRoom(context, session);
     return compact
         ? IconButton(
-            tooltip: 'Đóng phòng',
+            tooltip: s.closeRoomBtn,
             onPressed: onTap,
             icon: const Icon(Icons.meeting_room_outlined, color: RC.red),
           )
@@ -61,7 +62,7 @@ class CloseRoomButton extends StatelessWidget {
               side: const BorderSide(color: RC.red, width: 2),
             ),
             icon: const Icon(Icons.meeting_room_outlined),
-            label: const Text('Đóng phòng'),
+            label: Text(s.closeRoomBtn),
           );
   }
 }

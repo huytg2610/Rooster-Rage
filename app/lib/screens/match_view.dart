@@ -3,32 +3,34 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rooster_core/rooster_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../audio/sound_fx.dart';
 import '../controls/input_controller.dart';
 import '../game/rooster_game.dart';
+import '../l10n/l10n.dart';
+import '../main.dart' show musicMutedPref, soundMutedPref;
 import '../net/session.dart';
 import '../platform/web_helpers.dart';
 import '../ui/theme.dart';
-import '../audio/sound_fx.dart';
-import '../main.dart' show musicMutedPref, soundMutedPref;
 import '../widgets/chicken_info_card.dart';
 import '../widgets/close_room.dart';
 import '../widgets/controls_help.dart';
 
 /// Match screen: Flame world + HUD, with one raw [Listener] for multi-touch
 /// controls; keyboard (desktop browsers) goes through the game's focus.
-class MatchView extends StatefulWidget {
+class MatchView extends ConsumerStatefulWidget {
   final Session session;
   final VoidCallback onLeave;
   const MatchView({super.key, required this.session, required this.onLeave});
 
   @override
-  State<MatchView> createState() => _MatchViewState();
+  ConsumerState<MatchView> createState() => _MatchViewState();
 }
 
-class _MatchViewState extends State<MatchView> {
+class _MatchViewState extends ConsumerState<MatchView> {
   final _input = InputController(
     keyboardState: () => HardwareKeyboard.instance.logicalKeysPressed,
   );
@@ -129,37 +131,33 @@ class _MatchViewState extends State<MatchView> {
     final you = widget.session.match?.you;
     final info = you == null ? null : widget.session.match?.fighters[you];
     return info == null
-        ? 'kỹ năng riêng'
+        ? L10n.current.uniqueSkillDefault
         : ChickenClasses.byId(info.classId).skillName;
   }
 
   Future<void> _confirmLeave() async {
     final s = widget.session;
+    final l = L10n.current;
     final canClose = s.isOwner && !s.isLocal;
     final choice = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Rời trận?'),
-        content: Text(
-          canClose
-              ? 'Rời trận: gà của bạn được bot điều khiển tiếp.\n'
-                    'Đóng phòng: kết thúc trận và đưa mọi người ra ngoài.'
-              : 'Gà của bạn sẽ được bot điều khiển tiếp.',
-        ),
+        title: Text(l.leaveMatchTitle),
+        content: Text(l.leaveMatchContent(canClose)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Ở lại'),
+            child: Text(l.stayBtn),
           ),
           if (canClose)
             TextButton(
               style: TextButton.styleFrom(foregroundColor: RC.red),
               onPressed: () => Navigator.pop(ctx, 'close'),
-              child: const Text('Đóng phòng'),
+              child: Text(l.closeRoomBtn),
             ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, 'leave'),
-            child: const Text('Rời'),
+            child: Text(l.leaveBtn),
           ),
         ],
       ),
@@ -192,6 +190,8 @@ class _MatchViewState extends State<MatchView> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(l10nProvider);
+    final l = L10n.current;
     return Stack(
       children: [
         Positioned.fill(child: GameWidget(game: _game)),
@@ -224,7 +224,7 @@ class _MatchViewState extends State<MatchView> {
                   icon: _touch ? Icons.help_outline : Icons.keyboard,
                   onTap: _toggleHelp,
                   active: _showHelp,
-                  tooltip: _touch ? 'Hướng dẫn' : 'Hướng dẫn phím (H)',
+                  tooltip: _touch ? l.controlsGuideTouch : l.controlsGuideKeyboard,
                 ),
                 const SizedBox(height: 6),
                 _RoundButton(
@@ -235,10 +235,10 @@ class _MatchViewState extends State<MatchView> {
                             : Icons.volume_up),
                   onTap: _toggleSound,
                   tooltip: SoundFx.instance.muted
-                      ? 'Đang tắt hết — bấm để bật'
+                      ? l.soundMutedTooltip
                       : (SoundFx.instance.musicMuted
-                            ? 'Đang tắt nhạc — bấm để tắt hết'
-                            : 'Bấm để tắt nhạc'),
+                            ? l.soundMusicOffTooltip
+                            : l.soundOnTooltip),
                 ),
                 if (_myInfo != null) ...[
                   const SizedBox(height: 6),
@@ -246,9 +246,11 @@ class _MatchViewState extends State<MatchView> {
                     icon: Icons.info_outline,
                     onTap: _toggleInfo,
                     active: _showInfo,
-                    tooltip: 'Thông tin chiến kê của bạn',
+                    tooltip: l.yourRoosterInfo,
                   ),
                 ],
+                const SizedBox(height: 6),
+                const LanguageToggleButton(compact: true),
               ],
             ),
           ),

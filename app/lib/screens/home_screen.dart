@@ -5,6 +5,7 @@ import 'package:rooster_core/rooster_core.dart';
 
 import '../app/profile.dart';
 import '../app/providers.dart';
+import '../l10n/l10n.dart';
 import '../platform/web_helpers.dart';
 import '../ui/theme.dart';
 import '../widgets/chicken_avatar.dart';
@@ -66,7 +67,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final p = await ref.read(profileProvider.future);
     final name = _name.text.trim();
     if (name.isEmpty) {
-      setState(() => _error = 'Nhập tên chiến kê của bạn trước đã!');
+      setState(() => _error = L10n.current.nameRequired);
       return null;
     }
     final updated = p.copyWith(
@@ -91,7 +92,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (uri == null ||
         !(uri.scheme == 'ws' || uri.scheme == 'wss') ||
         uri.host.isEmpty) {
-      setState(() => _error = 'Địa chỉ host phải dạng ws://IP:8080/ws');
+      setState(() => _error = L10n.current.invalidHost);
       return;
     }
     WebHelpers.keepScreenOn();
@@ -101,6 +102,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
+
     final profile = ref.watch(profileProvider);
     if (!_loadedName && profile.hasValue) {
       _loadedName = true;
@@ -112,10 +116,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final title = Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
-          'ROOSTER RAGE',
+        Text(
+          s.appTitle,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 44,
             fontWeight: FontWeight.w900,
             color: RC.gold,
@@ -124,9 +128,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
-          'ĐẠI CHIẾN GÀ ĐÁ',
-          style: TextStyle(
+        Text(
+          s.appSubtitle,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w900,
             letterSpacing: 3,
@@ -162,8 +166,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             controller: _name,
             maxLength: 16,
             textInputAction: TextInputAction.done,
-            decoration: const InputDecoration(
-              labelText: 'Tên chiến kê',
+            decoration: InputDecoration(
+              labelText: s.roosterName,
               counterText: '',
             ),
             onChanged: (_) => setState(() => _error = null),
@@ -173,34 +177,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             FilledButton.icon(
               onPressed: _joinLan,
               icon: const Icon(Icons.wifi),
-              label: const Text('VÀO PHÒNG LAN'),
+              label: Text(s.joinLan),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: _playOffline,
               icon: const Icon(Icons.smart_toy_outlined),
-              label: const Text('Luyện với bot (offline)'),
+              label: Text(s.playBotsOffline),
             ),
           ] else ...[
             FilledButton.icon(
               onPressed: _playOffline,
               icon: const Icon(Icons.smart_toy_outlined),
-              label: const Text('CHƠI VỚI BOT'),
+              label: Text(s.playBots),
             ),
             const SizedBox(height: 10),
             OutlinedButton.icon(
               onPressed: _joinLan,
               icon: const Icon(Icons.wifi),
-              label: const Text('Vào phòng LAN'),
+              label: Text(s.joinLanLower),
             ),
           ],
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: () => RosterScreen.open(context),
             icon: const Icon(Icons.menu_book, color: RC.gold),
-            label: const Text(
-              'Xem thông tin 8 chiến kê',
-              style: TextStyle(color: RC.gold, fontWeight: FontWeight.w800),
+            label: Text(
+              s.viewRoster,
+              style: const TextStyle(color: RC.gold, fontWeight: FontWeight.w800),
             ),
           ),
           if (WebHelpers.isWeb)
@@ -210,14 +214,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 spacing: 6,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  const Text(
-                    'Đồ họa:',
-                    style: TextStyle(fontSize: 13, color: RC.muted),
+                  Text(
+                    s.graphics,
+                    style: const TextStyle(fontSize: 13, color: RC.muted),
                   ),
-                  for (final (q, label) in const [
-                    ('auto', 'Tự động'),
-                    ('low', 'Tiết kiệm'),
-                    ('high', 'Sắc nét'),
+                  for (final (q, label) in [
+                    ('auto', s.graphicsAuto),
+                    ('low', s.graphicsSaver),
+                    ('high', s.graphicsHigh),
                   ])
                     ChoiceChip(
                       label: Text(label, style: const TextStyle(fontSize: 12)),
@@ -233,9 +237,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ExpansionTile(
             tilePadding: EdgeInsets.zero,
             initiallyExpanded: false,
-            title: const Text(
-              'Địa chỉ host LAN',
-              style: TextStyle(fontSize: 13, color: RC.muted),
+            title: Text(
+              s.lanHostAddress,
+              style: const TextStyle(fontSize: 13, color: RC.muted),
             ),
             children: [
               TextField(
@@ -262,15 +266,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
     );
 
-    const howTo = WoodPanel(
+    final howTo = WoodPanel(
       child: Text(
-        'Điện thoại: kéo trái để chạy · chạm phải = đánh, giữ = đánh mạnh, '
-        'vuốt xuống = lướt, vuốt lên = nhảy · giữ THỦ để đỡ.\n'
-        'Máy tính: WASD chạy · J đánh (giữ J = mạnh) · giữ K đỡ · L lướt · '
-        'Space nhảy · U Nộ + chiêu cuối · O gáy.\n'
-        'Đánh trúng/bị đánh sẽ tích Nộ. Đầy Nộ thì bấm U (nút CHIÊU): vừa Nộ vừa tung chiêu cuối. '
-        'Mỗi đòn tốn thể lực — hất đối thủ ra khỏi sân để hạ gục nhanh!',
-        style: TextStyle(fontSize: 13, height: 1.4, color: RC.cream),
+        '${s.helpPhone}\n${s.helpDesktop}\n${s.helpTips}',
+        style: const TextStyle(fontSize: 13, height: 1.4, color: RC.cream),
       ),
     );
 
@@ -329,14 +328,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             top: 8,
             right: 8,
             child: SafeArea(
-              child: IconButton.filled(
-                tooltip: 'Thông tin các chiến kê',
-                style: IconButton.styleFrom(
-                  backgroundColor: RC.panel,
-                  foregroundColor: RC.gold,
-                ),
-                onPressed: () => RosterScreen.open(context),
-                icon: const Icon(Icons.menu_book),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const LanguageToggleButton(),
+                  const SizedBox(width: 8),
+                  IconButton.filled(
+                    tooltip: s.viewRoster,
+                    style: IconButton.styleFrom(
+                      backgroundColor: RC.panel,
+                      foregroundColor: RC.gold,
+                    ),
+                    onPressed: () => RosterScreen.open(context),
+                    icon: const Icon(Icons.menu_book),
+                  ),
+                ],
               ),
             ),
           ),

@@ -1,19 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rooster_core/rooster_core.dart';
 
 import '../audio/sound_fx.dart';
+import '../l10n/l10n.dart';
 import '../net/session.dart';
 import '../ui/theme.dart';
 import '../widgets/chicken_avatar.dart';
 import '../widgets/close_room.dart';
 
-class ResultsView extends StatelessWidget {
+class ResultsView extends ConsumerWidget {
   final Session session;
   final VoidCallback onLeave;
   const ResultsView({super.key, required this.session, required this.onLeave});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
     final results = session.results ?? const <FighterResult>[];
     final infos = session.match?.fighters ?? const {};
     final you = session.match?.you;
@@ -31,6 +35,11 @@ class ResultsView extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const Align(
+                  alignment: Alignment.topRight,
+                  child: LanguageToggleButton(compact: true),
+                ),
+                const SizedBox(height: 6),
                 const _PlayOnce(SoundId.fanfare),
                 if (winner != null) ...[
                   Center(
@@ -46,9 +55,7 @@ class ResultsView extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    winner.id == you
-                        ? 'BẠN VÔ ĐỊCH!'
-                        : '${winner.name} VÔ ĐỊCH!',
+                    s.championBanner(winner.name, winner.id == you),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 28,
@@ -65,37 +72,37 @@ class ResultsView extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      const Row(
+                      Row(
                         children: [
-                          SizedBox(width: 28),
+                          const SizedBox(width: 28),
                           Expanded(
                             child: Text(
-                              'Chiến kê',
-                              style: TextStyle(color: RC.muted, fontSize: 12),
+                              s.roosterCol,
+                              style: const TextStyle(color: RC.muted, fontSize: 12),
                             ),
                           ),
                           SizedBox(
                             width: 44,
                             child: Text(
-                              'KO',
+                              s.koCol,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: RC.muted, fontSize: 12),
+                              style: const TextStyle(color: RC.muted, fontSize: 12),
                             ),
                           ),
                           SizedBox(
                             width: 44,
                             child: Text(
-                              'Gục',
+                              s.fallsCol,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: RC.muted, fontSize: 12),
+                              style: const TextStyle(color: RC.muted, fontSize: 12),
                             ),
                           ),
                           SizedBox(
                             width: 52,
                             child: Text(
-                              'S.thương',
+                              s.dmgCol,
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: RC.muted, fontSize: 12),
+                              style: const TextStyle(color: RC.muted, fontSize: 12),
                             ),
                           ),
                         ],
@@ -138,7 +145,7 @@ class ResultsView extends StatelessWidget {
                                     children: [
                                       Text(
                                         r.id == you
-                                            ? '${info.name} (bạn)'
+                                            ? '${info.name} ${s.you}'
                                             : info.name,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
@@ -149,8 +156,8 @@ class ResultsView extends StatelessWidget {
                                         ),
                                       ),
                                       Text(
-                                        '${ChickenClasses.byId(info.classId).nameVi}'
-                                        '${r.id == mvpDamage ? ' · Đòn tay to nhất' : ''}',
+                                        '${s.chickenName(ChickenClasses.byId(info.classId))}'
+                                        '${r.id == mvpDamage ? ' · ${s.mvpDamage}' : ''}',
                                         style: const TextStyle(
                                           fontSize: 11,
                                           color: RC.muted,
@@ -193,27 +200,27 @@ class ResultsView extends StatelessWidget {
                 if (session.isOwner) ...[
                   FilledButton(
                     onPressed: session.rematch,
-                    child: const Text('ĐÁ TIẾP!'),
+                    child: Text(s.rematch),
                   ),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: session.backToLobby,
-                    child: const Text('Về phòng chờ'),
+                    child: Text(s.backToLobby),
                   ),
                   if (!session.isLocal) ...[
                     const SizedBox(height: 8),
                     CloseRoomButton(session: session),
                   ],
                 ] else
-                  const Text(
-                    'Chờ chủ phòng mở trận mới...',
+                  Text(
+                    s.waitingHostNext,
                     textAlign: TextAlign.center,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: RC.muted,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                TextButton(onPressed: onLeave, child: const Text('Rời phòng')),
+                TextButton(onPressed: onLeave, child: Text(s.leaveRoom)),
               ],
             ),
           ),

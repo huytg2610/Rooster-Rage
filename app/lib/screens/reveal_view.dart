@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:rooster_core/rooster_core.dart';
 
 import '../audio/sound_fx.dart';
+import '../l10n/l10n.dart';
 import '../net/session.dart';
 import '../ui/theme.dart';
 import '../widgets/chicken_avatar.dart';
@@ -99,8 +100,8 @@ class _RevealViewState extends State<RevealView>
                     const SizedBox(height: 12),
                     Text(
                       widget.session.room?.settings.mode == GameMode.competitive
-                          ? 'RA SÂN!'
-                          : 'BỐC THĂM CHIẾN KÊ!',
+                          ? L10n.current.fightersAssemble
+                          : L10n.current.roosterDraw,
                       style: const TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -193,7 +194,7 @@ class _Card extends StatelessWidget {
                       size: 70,
                     ),
                     Text(
-                      entry.chicken.def.nameVi,
+                      L10n.current.chickenName(entry.chicken.def),
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 12,
@@ -209,7 +210,7 @@ class _Card extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      entry.chicken.rarity.nameVi,
+                      L10n.current.rarityName(entry.chicken.rarity),
                       style: TextStyle(fontSize: 10, color: rarity),
                     ),
                   ],
@@ -263,15 +264,15 @@ class _MineOverlay extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text(
-                          'BẠN LÀ',
-                          style: TextStyle(
+                        Text(
+                          L10n.current.youAre,
+                          style: const TextStyle(
                             color: RC.muted,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
                         Text(
-                          def.nameVi,
+                          L10n.current.chickenName(def),
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.w900,
@@ -279,11 +280,11 @@ class _MineOverlay extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${def.role.nameVi} · ${c.variant.nameVi} (${c.variant.perkVi})',
+                          '${L10n.current.roleName(def.role)} · ${L10n.currentLang == AppLang.en ? c.variant.nameEn : c.variant.nameVi} (${L10n.currentLang == AppLang.en ? c.variant.perkEn : c.variant.perkVi})',
                           style: const TextStyle(fontSize: 12),
                         ),
                         Text(
-                          c.rarity.nameVi,
+                          L10n.current.rarityName(c.rarity),
                           style: TextStyle(
                             color: Color(c.rarity.color),
                             fontWeight: FontWeight.w900,
@@ -291,11 +292,11 @@ class _MineOverlay extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Kỹ năng: ${def.skillName}',
+                          L10n.current.skillLabel(def.skillName),
                           style: const TextStyle(fontWeight: FontWeight.w800),
                         ),
                         Text(
-                          def.skillDescVi,
+                          L10n.current.chickenSkillDesc(def),
                           style: const TextStyle(fontSize: 12, color: RC.muted),
                         ),
                       ],

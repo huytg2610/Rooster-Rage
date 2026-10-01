@@ -29,7 +29,7 @@ void main() {
     tester.view.physicalSize = const Size(1280, 3000);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
-    await tester.pumpWidget(const MaterialApp(home: RosterScreen()));
+    await tester.pumpWidget(const ProviderScope(child: MaterialApp(home: RosterScreen())));
     await tester.pump(const Duration(milliseconds: 100));
     expect(tester.takeException(), isNull);
     expect(find.byType(ChickenInfoCard), findsNWidgets(ChickenClasses.all.length));

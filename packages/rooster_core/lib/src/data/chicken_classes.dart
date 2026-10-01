@@ -25,6 +25,17 @@ extension RoleInfo on Role {
     Role.skirmisher => 'Du kích',
     Role.mystic => 'Pháp sư',
   };
+
+  String get nameEn => switch (this) {
+    Role.balanced => 'Balanced',
+    Role.assassin => 'Assassin',
+    Role.defender => 'Tank',
+    Role.riskDamage => 'Berserker',
+    Role.control => 'Disruptor',
+    Role.bruiser => 'Fighter',
+    Role.skirmisher => 'Skirmisher',
+    Role.mystic => 'Mage',
+  };
 }
 
 enum SkillId {

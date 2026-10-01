@@ -1,8 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rooster_core/rooster_core.dart';
 
+import '../l10n/l10n.dart';
 import '../net/session.dart';
 import '../ui/theme.dart';
 import '../widgets/chicken_avatar.dart';
@@ -10,15 +12,15 @@ import '../widgets/chicken_info_card.dart';
 
 /// Competitive mode: everyone picks a class + element; picks are visible
 /// so players can counter-pick (GDD §1B).
-class PickView extends StatefulWidget {
+class PickView extends ConsumerStatefulWidget {
   final Session session;
   const PickView({super.key, required this.session});
 
   @override
-  State<PickView> createState() => _PickViewState();
+  ConsumerState<PickView> createState() => _PickViewState();
 }
 
-class _PickViewState extends State<PickView> {
+class _PickViewState extends ConsumerState<PickView> {
   late final DateTime _end = DateTime.now().add(
     Duration(milliseconds: (widget.session.room!.timer * 1000).round()),
   );
@@ -31,6 +33,8 @@ class _PickViewState extends State<PickView> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
     final room = widget.session.room!;
     final others = room.players.where(
       (p) => p.pid != widget.session.myPid && p.picked != null,
@@ -50,12 +54,14 @@ class _PickViewState extends State<PickView> {
           children: [
             Row(
               children: [
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'CHỌN CHIẾN KÊ',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
+                    s.chooseRooster,
+                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900),
                   ),
                 ),
+                LanguageToggleButton(compact: true),
+                const SizedBox(width: 8),
                 _Countdown(end: _end),
               ],
             ),
@@ -66,9 +72,9 @@ class _PickViewState extends State<PickView> {
                   spacing: 8,
                   runSpacing: 4,
                   children: [
-                    const Text(
-                      'Đối thủ đã chọn:',
-                      style: TextStyle(color: RC.muted),
+                    Text(
+                      s.opponentsPicked,
+                      style: const TextStyle(color: RC.muted),
                     ),
                     for (final p in others)
                       Chip(
@@ -76,7 +82,7 @@ class _PickViewState extends State<PickView> {
                           backgroundColor: Color(slotColors[p.slot % 8]),
                         ),
                         label: Text(
-                          '${p.name}: ${ChickenClasses.byId(p.picked!).nameVi}',
+                          '${p.name}: ${s.chickenName(ChickenClasses.byId(p.picked!))}',
                         ),
                       ),
                   ],
@@ -110,7 +116,7 @@ class _PickViewState extends State<PickView> {
               children: [
                 for (final v in Variant.values)
                   ChoiceChip(
-                    label: Text('${v.nameVi} · ${v.perkVi}'),
+                    label: Text(L10n.currentLang == AppLang.en ? '${v.nameEn} · ${v.perkEn}' : '${v.nameVi} · ${v.perkVi}'),
                     selected: v == _variant,
                     selectedColor: Color(v.color),
                     onSelected: (_) {
@@ -123,8 +129,8 @@ class _PickViewState extends State<PickView> {
             const SizedBox(height: 12),
             Text(
               _class == null
-                  ? 'Chưa chọn — hết giờ sẽ được chọn ngẫu nhiên.'
-                  : 'Đã chọn! Chờ mọi người...',
+                  ? s.notSelectedPrompt
+                  : s.chosenWaiting,
               textAlign: TextAlign.center,
               style: const TextStyle(
                 color: RC.muted,
@@ -169,7 +175,8 @@ class _ClassCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final s = def.stats;
+    final l = L10n.current;
+    final stats = def.stats;
     Widget stat(String n, double v, Color c) => Row(
       children: [
         SizedBox(
@@ -210,31 +217,31 @@ class _ClassCard extends StatelessWidget {
               state: selected ? FState.run : FState.idle,
             ),
             Text(
-              def.nameVi,
+              l.chickenName(def),
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
             Text(
-              def.role.nameVi,
+              l.roleName(def.role),
               style: const TextStyle(fontSize: 12, color: RC.gold),
             ),
             const SizedBox(height: 6),
-            stat('Máu', s.hp, RC.hp),
-            stat('Đòn', s.damage, RC.orange),
-            stat('Tốc', s.speed, RC.green),
-            stat('Sức', s.stamina, RC.stamina),
+            stat(l.statHp, stats.hp, RC.hp),
+            stat(l.statAtk, stats.damage, RC.orange),
+            stat(l.statSpd, stats.speed, RC.green),
+            stat(l.statStm, stats.stamina, RC.stamina),
             const SizedBox(height: 6),
             Text(
               def.skillName,
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
             ),
             Text(
-              def.skillDescVi,
+              l.chickenSkillDesc(def),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 11, color: RC.muted),
             ),
             TextButton(
               onPressed: () => _details(context),
-              child: const Text('Chi tiết', style: TextStyle(fontSize: 12)),
+              child: Text(l.details, style: const TextStyle(fontSize: 12)),
             ),
           ],
         ),
@@ -253,7 +260,7 @@ class _ClassCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'Đã có: $takenBy',
+                l.takenByPlayer(takenBy!),
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 12,

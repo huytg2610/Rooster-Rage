@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rooster_core/rooster_core.dart';
 
+import '../l10n/l10n.dart';
 import '../net/session.dart';
 import '../platform/web_helpers.dart';
 import '../ui/theme.dart';
@@ -8,13 +10,16 @@ import '../widgets/close_room.dart';
 import '../widgets/qr_view.dart';
 import 'roster_screen.dart';
 
-class LobbyView extends StatelessWidget {
+class LobbyView extends ConsumerWidget {
   final Session session;
   final VoidCallback onLeave;
   const LobbyView({super.key, required this.session, required this.onLeave});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(l10nProvider);
+    final s = L10n.current;
+
     final room = session.room!;
     final owner = session.isOwner;
     final st = room.settings;
@@ -27,7 +32,7 @@ class LobbyView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'CHIẾN KÊ ($humans người${bots > 0 ? ' + $bots bot' : ''})',
+            '${s.roostersHeader(humans)}${bots > 0 ? ' + $bots bot' : ''}',
             style: const TextStyle(fontWeight: FontWeight.w900, color: RC.gold),
           ),
           const SizedBox(height: 8),
@@ -43,7 +48,7 @@ class LobbyView extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
-                      '${p.name}${p.pid == session.myPid ? ' (bạn)' : ''}',
+                      '${p.name}${p.pid == session.myPid ? ' ${s.you}' : ''}',
                       style: TextStyle(
                         fontWeight: FontWeight.w800,
                         color: p.connected ? RC.cream : RC.muted,
@@ -119,33 +124,33 @@ class LobbyView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            owner ? 'LUẬT CHƠI' : 'LUẬT CHƠI (chủ phòng chỉnh)',
+            owner ? s.rulesHeader : '${s.rulesHeader} (${L10n.currentLang == AppLang.en ? "host controls" : "chủ phòng chỉnh"})',
             style: const TextStyle(fontWeight: FontWeight.w900, color: RC.gold),
           ),
           const SizedBox(height: 8),
-          row('Chế độ', [
+          row(s.mode, [
             choice(
-              'Gà ngẫu nhiên',
+              s.randomChicken,
               GameMode.party,
               st.mode,
               (v) => set(st.copyWith(mode: v)),
             ),
             choice(
-              'Tự chọn gà',
+              s.pickChicken,
               GameMode.competitive,
               st.mode,
               (v) => set(st.copyWith(mode: v)),
             ),
           ]),
-          row('Luật', [
+          row(s.rules, [
             choice(
-              'Hồi sinh',
+              s.respawn,
               false,
               st.survival,
               (v) => set(st.copyWith(survival: v)),
             ),
             choice(
-              'Sinh tồn',
+              s.survival,
               true,
               st.survival,
               (v) => set(st.copyWith(survival: v)),
@@ -154,16 +159,14 @@ class LobbyView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              st.survival
-                  ? 'Không hồi sinh: gục là bị loại. Con gà cuối cùng còn đứng thắng.'
-                  : 'Gục thì hồi sinh (chết càng nhiều chờ càng lâu). Nhiều KO nhất thắng.',
+              st.survival ? s.survivalDesc : s.respawnDesc,
               style: const TextStyle(fontSize: 12, color: RC.cream),
             ),
           ),
-          row('Đấu trường', [
+          row(s.arena, [
             for (final a in Arenas.all)
               choice(
-                a.nameVi,
+                s.arenaName(a),
                 a.id,
                 st.arenaId,
                 (v) => set(st.copyWith(arenaId: v)),
@@ -172,28 +175,28 @@ class LobbyView extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: Text(
-              arena.descVi,
+              s.arenaDesc(arena),
               style: const TextStyle(fontSize: 12, color: RC.cream),
             ),
           ),
-          row('Thời gian', [
+          row(s.duration, [
             for (final d in const [60, 120, 180, 300])
               choice(
-                '${d ~/ 60} phút',
+                s.minutes(d ~/ 60),
                 d,
                 st.duration,
                 (v) => set(st.copyWith(duration: v)),
               ),
           ]),
-          row('Thêm bot', [
+          row(s.addBots, [
             for (var b = 0; b <= 7; b++)
               if (b + humans <= RoomHost.maxFighters)
                 choice('$b', b, st.bots, (v) => set(st.copyWith(bots: v))),
           ]),
-          row('Bot', [
-            choice('Dễ', 0, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
-            choice('Vừa', 1, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
-            choice('Khó', 2, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
+          row(s.botDifficulty, [
+            choice(s.easy, 0, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
+            choice(s.medium, 1, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
+            choice(s.hard, 2, st.botLevel, (v) => set(st.copyWith(botLevel: v))),
           ]),
         ],
       ),
@@ -204,9 +207,9 @@ class LobbyView extends StatelessWidget {
         : WoodPanel(
             child: Column(
               children: [
-                const Text(
-                  'BẠN BÈ CÙNG WIFI QUÉT ĐỂ VÀO',
-                  style: TextStyle(
+                Text(
+                  s.scanToJoin.toUpperCase(),
+                  style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     color: RC.gold,
                     fontSize: 13,
@@ -228,14 +231,14 @@ class LobbyView extends StatelessWidget {
     final start = owner
         ? FilledButton(
             onPressed: canStart ? session.start : null,
-            child: Text(canStart ? 'BẮT ĐẦU!' : 'Cần ít nhất 2 chiến kê'),
+            child: Text(canStart ? s.start : s.needAtLeastTwo),
           )
-        : const Padding(
-            padding: EdgeInsets.all(12),
+        : Padding(
+            padding: const EdgeInsets.all(12),
             child: Text(
-              'Chờ chủ phòng bắt đầu...',
+              s.waitingHostStart,
               textAlign: TextAlign.center,
-              style: TextStyle(color: RC.muted, fontWeight: FontWeight.w800),
+              style: const TextStyle(color: RC.muted, fontWeight: FontWeight.w800),
             ),
           );
 
@@ -244,12 +247,14 @@ class LobbyView extends StatelessWidget {
         IconButton(onPressed: onLeave, icon: const Icon(Icons.arrow_back)),
         Expanded(
           child: Text(
-            room.local ? 'LUYỆN TẬP OFFLINE' : 'PHÒNG CHỜ LAN',
+            room.local ? s.practiceTitle : '${s.lobbyTitle} LAN',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
           ),
         ),
+        const LanguageToggleButton(compact: true),
+        const SizedBox(width: 4),
         IconButton(
-          tooltip: 'Thông tin các chiến kê',
+          tooltip: s.viewRoster,
           onPressed: () => RosterScreen.open(context),
           icon: const Icon(Icons.menu_book, color: RC.gold),
         ),

@@ -31,12 +31,28 @@ extension VariantInfo on Variant {
         Variant.thunder => 'Lôi',
       };
 
+  String get nameEn => switch (this) {
+        Variant.fire => 'Fire',
+        Variant.water => 'Water',
+        Variant.earth => 'Earth',
+        Variant.wind => 'Wind',
+        Variant.thunder => 'Thunder',
+      };
+
   String get perkVi => switch (this) {
         Variant.fire => '+5% sát thương',
         Variant.water => '+20% hồi thăng bằng',
         Variant.earth => '+8% máu',
         Variant.wind => '+5% tốc độ',
         Variant.thunder => '+12% hồi thể lực',
+      };
+
+  String get perkEn => switch (this) {
+        Variant.fire => '+5% Damage',
+        Variant.water => '+20% Balance Regen',
+        Variant.earth => '+8% HP',
+        Variant.wind => '+5% Speed',
+        Variant.thunder => '+12% Stamina Regen',
       };
 
   VariantMods get mods => switch (this) {
@@ -65,6 +81,13 @@ extension RarityInfo on Rarity {
         Rarity.rare => 'Hiếm',
         Rarity.epic => 'Sử thi',
         Rarity.legendary => 'Huyền thoại',
+      };
+
+  String get nameEn => switch (this) {
+        Rarity.common => 'Common',
+        Rarity.rare => 'Rare',
+        Rarity.epic => 'Epic',
+        Rarity.legendary => 'Legendary',
       };
 
   double get weight => switch (this) {
