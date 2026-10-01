@@ -1,0 +1,11 @@
+name: rooster_core
+description: Rooster Rage shared game core — pure Dart simulation, combat rules, random chicken system and network protocol. No Flutter / dart:io imports so it runs on web, Android, iOS and the Dart server.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.11.0
+
+dev_dependencies:
+  lints: ^6.0.0
+  test: ^1.25.6

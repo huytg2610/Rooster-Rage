@@ -1,0 +1,42 @@
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE and Editor files
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# AI Agent memory, local cache and vector databases
+.claude-flow/
+.swarm/
+*.db
+*.db-shm
+*.db-wal
+ruvector.db*
+
+# Dart and Flutter build artifacts & dependencies
+.dart_tool/
+**/.dart_tool/
+build/
+**/build/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+**/doc/api/
+coverage/
+**/coverage/
+
+# Android Studio / Xcode
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/ios/Flutter/.last_build_id
